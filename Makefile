@@ -83,7 +83,7 @@ $(TESTS):
 		fi; \
 
 openlane:
-	@`which openlane` config.json
+	@`which openlane` --flow Classic config.*
 	@cd runs && ln -s `ls -Art | tail -n 1` recent
 
 .PHONY: clean
