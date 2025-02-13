@@ -130,12 +130,20 @@ Or using the provided Makefile:
 - A sucessful flow will create a `final` directory with output results
     - `runs/<runDate>/error.log` should be empty
     - `runs/<runDate>/warning.log` ideally should be empty, but often is not
-        - The most important warnings are timing violations.
+        - The most important warnings are timing violations. Keep your eyes out for `Setup violations found` or similar.
+- A failure will populate the aformentioned `error.log`, and no `final` directory will be 
+    - Check the last (highest-numbered) step for more specific logs to see where things went wrong.
 
 # Treasure Hunt
 
 With your design successfully passed through the OpenLane flow, it is time to find some important statistics. Find and format a report on the following:
 
+- Design Pictures: There are many ways to view your design, including:
+    - `openroad`: launch with `openroad -gui` and open `runs/<run>/final/odb/<design>.odb`
+    - `magic`
+- Maximum Frequency
+    - Iterate over your design, lowering period until you start to hit timing warnings.
 - Design and Core Area
     - What is the difference?
-- 
+    - What % of a Tiny Tapeout die is this?
+    - What % of an Efabless Chipignite die is this?

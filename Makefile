@@ -84,7 +84,17 @@ $(TESTS):
 
 openlane:
 	@`which openlane` --flow Classic config.*
-	@cd runs && ln -s `ls -Art | tail -n 1` recent
+	@cd runs && rm -f recent && ln -sf `ls | tail -n 1` recent
+
+
+OPENROAD_GUI_CMDS="\
+read_db  `find runs/recent/final/odb/*` \n\
+read_lib  $(PDKPATH)/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib \n\
+read_sdc  `find runs/recent/final/sdc/*` \n\
+gui::show"
+
+openroad:
+	printf $(OPENROAD_GUI_CMDS) | openroad
 
 .PHONY: clean
 clean:
