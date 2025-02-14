@@ -134,6 +134,38 @@ Or using the provided Makefile:
 - A failure will populate the aformentioned `error.log`, and no `final` directory will be 
     - Check the last (highest-numbered) step for more specific logs to see where things went wrong.
 
+### Static Timing Analysis (STA)
+
+1. Create the variable `SYNTH_AUTONAME` and set it to true to your config. Then Re-Run the flow.
+    - This ensures logic and wires are named based on your verilog instead of arbitrarily numbered. 
+    - Important for when we start tracing out timing paths.
+    - Not recomended to have this turned on all the time, can cause instability in large designs.
+2. Re-Run the flow (`make openlane` or likewise)
+3. Open the timing results:
+    - `openroad-staprepnr` (step 12) has before-layout timing
+    - `openroad-stapostpnr` (step 56) has after-layout timing
+    - Within each, `summary.rpt` has a summary of the worst slack (`WS`) and total negative slack (`TNS`)
+
+>[!NOTE] 
+>Timing analysis uses __corners__ to cover the slowest and fastest possible performance of your chip, based on fabrication variation and conditions.
+>  
+>| Process Variation | Temperature   | Voltage   |
+>| ----------------- | ------------- | --------- |
+>| ss (slow)         | 100 C         | 1.6 V     |
+>| tt (typical)      | 40 C          | 1.8 V     |  
+>| ff (fast)         | 25 C          | 1.95 V    |
+> 
+> - __Setup Violations__ occur when your chip's logic is too slow to meet the target frequency
+>   - Most likely in slowest corner, `ss_100C_1.6V`
+>   - Concerned with "Maxs Paths", longest and slowest paths between registers
+> - __Hold Violations__ occur when your chip's logic is too fast, causing a register's input not to be stable.
+>   - Most likely in fastest corner, `ff_25C_1.95V`
+>   - Concerned with "Min Paths", shortest and fastest paths between registers
+
+4. View the Max Path results in the slowest corner
+    - `max_ss_100C_1v60/max.rpt` shows the worst max paths.
+
+
 # Treasure Hunt
 
 With your design successfully passed through the OpenLane flow, it is time to find some important statistics. Find and format a report on the following:
