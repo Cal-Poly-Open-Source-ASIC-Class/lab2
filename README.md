@@ -163,16 +163,30 @@ Or using the provided Makefile:
 >   - Concerned with "Min Paths", shortest and fastest paths between registers
 
 4. View the Max Path results in the slowest corner
-    - `max_ss_100C_1v60/max.rpt` shows the worst max paths.
+    - `runs/<run>/56-openroad-stapostpnr/max_ss_100C_1v60/max.rpt` shows the worst max paths.
 
+5. Open your design in `openroad` to visually view the worst max paths.
+    - `make openroad` will launch openroad on your most recent run.
+    - Navigate to the timing report tab on the right and then click update.
+    - Click on your worst paths to see them visualized on your laid out chip.
+    - To use openroad manually, launch `openroad` from the command line and input the following commands:
+    ```
+    read_db runs/recent/final/odb/<name>.odb
+    read_lib /foss/pdks/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib
+    read_sdc runs/recent/final/sdc/<name>.sdc
+    gui::show
+    ```
 
 # Treasure Hunt
 
 With your design successfully passed through the OpenLane flow, it is time to find some important statistics. Find and format a report on the following:
 
 - Design Pictures: There are many ways to view your design, including:
+    - `make openroad` to auto view your last design
     - `openroad`: launch with `openroad -gui` and open `runs/<run>/final/odb/<design>.odb`
-    - `magic`
+    - `magic runs/<run>/final/mag/<design>.mag` to launch magic
+        - Select your design by drawing a box around it. Then type `expand all` in the magic console to see all the cells.
+    - `klayout runs/<run>/final/klayout_gds/<design>.klayout.gds`
 - Maximum Frequency
     - Iterate over your design, lowering period until you start to hit timing warnings.
 - Design and Core Area
