@@ -48,7 +48,7 @@ TEST_ORANGE := $(shell tput setaf 214)
 TEST_RED := $(shell tput setaf 1)
 TEST_RESET := $(shell tput sgr0)
 
-all: lint_all synth_check tests
+all: lint_all tests
 
 lint: lint_all
 
@@ -76,16 +76,15 @@ lint_top:
 
 tests: $(TESTS) 
 tests/: $(TESTS)
-i_tests: 
+itests: 
 	@ICARUS=1 make tests
 
 gl_tests:
-	echo $(GL_DEFINES)
-	mkdir -p gl
-	cp runs/recent/final/pnl/* gl/
-	cat scripts/gatelevel.vh gl/*.v > gl/temp
-	mv -f gl/temp gl/*.v
-	rm -f gl/temp
+	@mkdir -p gl
+	@cp runs/recent/final/pnl/* gl/
+	@cat scripts/gatelevel.vh gl/*.v > gl/temp
+	@mv -f gl/temp gl/*.v
+	@rm -f gl/temp
 	@GL=1 make tests
 
 .PHONY: $(TESTS)
@@ -93,16 +92,21 @@ $(TESTS):
 	@printf "\n$(GREEN)$(BOLD) ----- Running Test: $@ ----- $(RESET)\n"
 	@printf "\n$(BOLD) Building with $(SIMULATOR)... $(RESET)\n"
 
+# Build With Simulator
 	@cd $(TEST_DIR)/$@;\
-		$(SIMULATOR) $(SIMULATOR_ARGS) $(SIMULATOR_SRCS) $(LINT_INCLUDES) > /dev/null
+		$(SIMULATOR) $(SIMULATOR_ARGS) $(SIMULATOR_SRCS) $(LINT_INCLUDES) > build.log
 	
 	@printf "\n$(BOLD) Running... $(RESET)\n"
 
-	@if cd $(TEST_DIR)/$@; ./$(SIMULATOR_BINARY) > results.txt ; then \
+# Run Binary and Check for Error in Result
+	@if cd $(TEST_DIR)/$@;\
+		./$(SIMULATOR_BINARY) > results.log \
+		&& !( cat results.log | grep -qi error ) \
+		then \
 			printf "$(GREEN)PASSED $@$(RESET)\n"; \
 		else \
 			printf "$(RED)FAILED $@$(RESET)\n"; \
-			cat results.txt; \
+			cat results.log; \
 		fi; \
 
 openlane:
@@ -117,5 +121,5 @@ openroad:
 clean:
 	rm -f `find tests -iname "*.vcd"`
 	rm -f `find tests -iname "a.out"`
-	rm -f `find tests -iname "results.txt"`
+	rm -f `find tests -iname "*.log"`
 	rm -rf `find tests -iname "obj_dir"`
