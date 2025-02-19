@@ -1,14 +1,6 @@
 INC_DIR := ./include
-RESULTS_DIR := ./results
 
-# Define Top Module Here
-TOP_MODULE 	:= user_project_wrapper
-TOP_FILE	:= $(shell find . -name '$(TOP_MODULE).sv' -or -name '$(TOP_MODULE).v')
 RTL_SRCS 	:= $(shell find rtl -name '*.sv' -or -name '*.v')
-
-# Define anything you don't want synthesized here, % is wildcard
-DONT_SYNTH := ./core/rtl/wrapper_modules/% ./tests/%
-SNYTH_SRCS := $(filter-out $(DONT_SYNTH), $(RTL_SRCS))
 
 INCLUDE_DIRS := $(sort $(dir $(shell find . -name '*.svh')))
 RTL_DIRS	 := $(sort $(dir $(RTL_SRCS)))
@@ -29,7 +21,7 @@ SIMULATOR_SRCS := *.sv
 # Optional use of Icarus as Linter and Simulator
 ifdef ICARUS
 SIMULATOR := iverilog
-SIMULATOR_ARGS := -g2005-sv 
+SIMULATOR_ARGS := -g2012 
 SIMULATOR_BINARY := a.out
 SIMULATOR_SRCS := $(foreach src, $(RTL_SRCS), $(realpath $(src))) *.sv
 endif
@@ -37,9 +29,9 @@ endif
 ifdef GL
 SIMULATOR := iverilog
 LINT_INCLUDES := -I$(PDKPATH) -I$(realpath gl)
-SIMULATOR_ARGS := -g2005-sv -DFUNCTIONAL -DUSE_POWER_PINS 
+SIMULATOR_ARGS := -g2012 -DFUNCTIONAL -DUSE_POWER_PINS 
 SIMULATOR_BINARY := a.out
-SIMULATOR_SRCS = $(realpath gl)/*.sv *.sv
+SIMULATOR_SRCS = $(realpath gl)/* *.sv
 endif
 
 LINT_OPTS += --lint-only --timing $(LINT_INCLUDES)
@@ -81,13 +73,25 @@ lint_top:
 	@printf "Linting Top Level Module: $(TOP_FILE)\n";
 	$(LINTER) $(LINT_OPTS) --top-module $(TOP_MODULE) $(TOP_FILE)
 
-tests: $(TESTS) 
 
+tests: $(TESTS) 
+tests/: $(TESTS)
+i_tests: 
+	@ICARUS=1 make tests
+
+gl_tests:
+	echo $(GL_DEFINES)
+	mkdir -p gl
+	cp runs/recent/final/pnl/* gl/
+	cat scripts/gatelevel.vh gl/*.v > gl/temp
+	mv -f gl/temp gl/*.v
+	rm -f gl/temp
+	@GL=1 make tests
 
 .PHONY: $(TESTS)
 $(TESTS): 
 	@printf "\n$(GREEN)$(BOLD) ----- Running Test: $@ ----- $(RESET)\n"
-	@printf "\n$(BOLD) Building... $(RESET)\n"
+	@printf "\n$(BOLD) Building with $(SIMULATOR)... $(RESET)\n"
 
 	@cd $(TEST_DIR)/$@;\
 		$(SIMULATOR) $(SIMULATOR_ARGS) $(SIMULATOR_SRCS) $(LINT_INCLUDES) > /dev/null
@@ -106,14 +110,8 @@ openlane:
 	@cd runs && rm -f recent && ln -sf `ls | tail -n 1` recent
 
 
-OPENROAD_GUI_CMDS="\
-read_db  `find runs/recent/final/odb/*` \n\
-read_lib  $(PDKPATH)/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib \n\
-read_sdc  `find runs/recent/final/sdc/*` \n\
-gui::show"
-
 openroad:
-	printf $(OPENROAD_GUI_CMDS) | openroad
+	scripts/openroad_launch.sh | openroad
 
 .PHONY: clean
 clean:
