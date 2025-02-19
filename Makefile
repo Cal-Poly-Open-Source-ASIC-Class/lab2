@@ -19,10 +19,29 @@ TEST_DIR = ./tests
 TEST_SUBDIRS = $(shell cd $(TEST_DIR) && ls -d */ | grep -v "__pycache__" )
 TESTS = $(TEST_SUBDIRS:/=)
 
+# Main Linter and Simulatior is Verilator
 LINTER := verilator
 SIMULATOR := verilator
 SIMULATOR_ARGS := --binary --timing --trace --trace-structs \
 	--assert --timescale 1ns --quiet    
+SIMULATOR_BINARY := ./obj_dir/V*
+SIMULATOR_SRCS := *.sv
+# Optional use of Icarus as Linter and Simulator
+ifdef ICARUS
+SIMULATOR := iverilog
+SIMULATOR_ARGS := -g2005-sv 
+SIMULATOR_BINARY := a.out
+SIMULATOR_SRCS := $(foreach src, $(RTL_SRCS), $(realpath $(src))) *.sv
+endif
+# Gate Level Verification
+ifdef GL
+SIMULATOR := iverilog
+LINT_INCLUDES := -I$(PDKPATH) -I$(realpath gl)
+SIMULATOR_ARGS := -g2005-sv -DFUNCTIONAL -DUSE_POWER_PINS 
+SIMULATOR_BINARY := a.out
+SIMULATOR_SRCS = $(realpath gl)/*.sv *.sv
+endif
+
 LINT_OPTS += --lint-only --timing $(LINT_INCLUDES)
 
 # Text formatting for tests
@@ -68,14 +87,14 @@ tests: $(TESTS)
 .PHONY: $(TESTS)
 $(TESTS): 
 	@printf "\n$(GREEN)$(BOLD) ----- Running Test: $@ ----- $(RESET)\n"
-	@printf "\n$(BOLD) Verilating... $(RESET)\n"
+	@printf "\n$(BOLD) Building... $(RESET)\n"
 
 	@cd $(TEST_DIR)/$@;\
-		$(SIMULATOR) $(SIMULATOR_ARGS) *.sv $(LINT_INCLUDES) > /dev/null
-
+		$(SIMULATOR) $(SIMULATOR_ARGS) $(SIMULATOR_SRCS) $(LINT_INCLUDES) > /dev/null
+	
 	@printf "\n$(BOLD) Running... $(RESET)\n"
 
-	@if cd $(TEST_DIR)/$@; ./obj_dir/V* > results.txt ; then \
+	@if cd $(TEST_DIR)/$@; ./$(SIMULATOR_BINARY) > results.txt ; then \
 			printf "$(GREEN)PASSED $@$(RESET)\n"; \
 		else \
 			printf "$(RED)FAILED $@$(RESET)\n"; \
@@ -98,6 +117,7 @@ openroad:
 
 .PHONY: clean
 clean:
-# Remove results directory and clean core
-	-rm -rf $(RESULTS_DIR)
-	$(foreach test,$(TESTS), make -C $(TEST_DIR)/$(test) clean $(var);)
+	rm -f `find tests -iname "*.vcd"`
+	rm -f `find tests -iname "a.out"`
+	rm -f `find tests -iname "results.txt"`
+	rm -rf `find tests -iname "obj_dir"`
