@@ -3,10 +3,10 @@
 
 # Getting Started
 
-- Start by __forking__ this repository, __not__ cloning it. This will create a copy that you own.
-- Then, clone your forked copy into the `workspace`  folder. In other words, `cd` into `asic-tools/workspace`, and then `git clone <your forked copy>`
->#### Forking:
->![alt text](docs/fork.png)
+- Start by __using this template__, __not__ cloning it. This will create a copy that you own.
+- Then, clone __your copy__ into the `workspace`  folder. In other words, make sure you are in `~/workspace`, and then `git clone <your forked copy.git>`
+>#### Using as Template:
+>![alt text](docs/template.png)
 
 >#### Cloning:
 >![alt text](docs/clone.png)
@@ -76,21 +76,18 @@ VERILOG_FILES:
 
 </td></tr></table>
 
-We can also use the `dir::` preprocessor command to use wildcard matching. For example, `dir::rtl/*.sv` goes into the `rtl` directory and matches all files ending in `.sv`.
+We can also use the `dir::` preprocessor command to use wildcard matching. For example, `dir::rtl/*.sv` goes into the `rtl` directory and matches all files ending in `.sv`. Only use this if you have a flat directory structure, meaning all of your verilog files are in one folder.
 
 <table><tr><td>
 
 ```Json
-"VERILOG_FILES": ["dir::rtl/*.sv",
- "dir::rtl2/*.sv"]
+"VERILOG_FILES": "dir::rtl/*.sv",
 ```
 
 </td><td>
 
 ```Yaml
-VERILOG_FILES:
-- dir::include/*.svh
-- dir::rtl/*.sv
+VERILOG_FILES: dir::rtl/*.sv
 ```
 
 </td></tr></table>
