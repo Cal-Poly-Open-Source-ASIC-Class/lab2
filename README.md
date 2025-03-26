@@ -237,6 +237,8 @@ With your design successfully passed through the OpenLane flow, it is time to fi
 - Critical Path
     - After inspecting the post place-and-route (pnr) timing analysis (sta), what signals were involved in your critical path?
     - What line(s) of your verilog code created this critical path? This may take some thinking.
+- Gate Level Tests
+    - In-lab demo of successful tests
 - Design Area and Core Area 
     - Check the `final/metrics.json` of your run. Note the units are square microns / square um.
     - What % of a [Tiny Tapeout](https://tinytapeout.com/) tile is this? Look for dimensions in `um`.
