@@ -183,6 +183,50 @@ There are many ways to view your design, including:
     gui::show
     ```
 
+### Gate Level Testing
+
+Once your design has completed through the flow (or at the very least passed synthesis), you will receive a __gate-level netlist__, which is a verilog file of your design using only standard cell gates. 
+- It can be found in the `pnl` folder of your final results
+- In other words, look in `runs/recent/final/pnl/`
+
+This file provides a more accurate model of your design as it exists on hardware. It is important to make sure our designs work not just in the simulator but also after synthesis, which is why we often re-run our tests against the gate-level netlist model, called gate-level simulation. For gate-level simulation, we have to use Icarus (iverilog) instead of verilator, since verilator does not support certain gate-level features.
+
+#### Powering
+This model also needs to be powered to function correctly. Add the following to the global scope all of your testbenches, so that Power and Ground wires are added when necessary. 
+
+```verilog
+`ifdef USE_POWER_PINS
+    wire VPWR;
+    wire VGND;
+    assign VPWR=1;
+    assign VGND=0;
+`endif
+
+```
+#### Automatic Gate Level Tests
+To automatically run all tests against your most recent openlane run's gate-level model, use: 
+```
+make gl_tests
+```
+After running this, you may run a specific test with
+```
+GL=1 make tests/<testname>
+```
+#### Manual Gate Level Tests
+To manually run tests against your gate-level model:
+- Create a directory called `gl` (try `mkdir gl`) and copy your model file `<design>.pnl.v` into that folder. 
+- Then, add the following line to the top of the netlist (`<design>.pnl.v`):
+```verilog
+`define UNIT_DELAY #1
+`define USE_POWER_PINS
+`define FUNCTIONAL
+`include "libs.ref/sky130_fd_sc_hd/verilog/primitives.v"
+`include "libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v"
+```
+- This tells the simulator where to look for definitions of standard cells.
+- Finally, run tests using `GL=1 make tests` or `GL=1 make tests/<testname>`
+
+
 # Deliverables
 
 With your design successfully passed through the OpenLane flow, it is time to find some important statistics. Find and format a report on the following:
